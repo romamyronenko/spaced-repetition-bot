@@ -1,41 +1,31 @@
 import copy
 import datetime
 
-import pytest
-from sqlalchemy import create_engine, select, MetaData
-from sqlalchemy.orm import declarative_base, sessionmaker, Session
+from sqlalchemy import select
+from sqlalchemy.orm import declarative_base
 
-from db.schema import Card, Base
-from db.dbmanager import DBManager
+from conftest import session
+from db.schema import Card
 
 base = declarative_base()
 
 
-class DBHelper:
-    _memory_engine = create_engine("sqlite://")
-    session = Session(_memory_engine)
-
-    @pytest.fixture()
-    def db_manager(self):
-        Base.metadata.create_all(self._memory_engine)
-
-        yield DBManager(self._memory_engine)
-
-        Base.metadata.drop_all(bind=self._memory_engine)
-
-    def add_card(self, card_data):
+class DBTestHelper:
+    @staticmethod
+    def add_card(card_data):
         card = Card(**card_data)
 
-        self.session.add(card)
-        self.session.commit()
+        session.add(card)
+        session.commit()
         return card
 
-    def is_card_in_table(self, card_data):
+    @staticmethod
+    def is_card_in_table(card_data):
         stmt = select(Card).where(
             (Card.owner == card_data["owner"])
             & (Card.front_side == card_data["front_side"])
         )
-        cards = self.session.scalars(stmt).all()
+        cards = session.scalars(stmt).all()
         return bool(cards)
 
     def assert_card_in_table(self, card_data):
@@ -45,7 +35,7 @@ class DBHelper:
         assert not self.is_card_in_table(card_data)
 
 
-class TestDBManager(DBHelper):
+class TestDBManagerTest(DBTestHelper):
     TEST_CARD_DATA = dict(
         front_side="front",
         back_side="back",
