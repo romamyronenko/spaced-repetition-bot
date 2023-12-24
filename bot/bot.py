@@ -1,4 +1,5 @@
 from aiogram import Bot, Dispatcher, types, Router, F
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -42,6 +43,7 @@ async def learn_callback(callback: types.CallbackQuery, state: FSMContext) -> No
         await callback.message.answer(text="На сьогодні ви вже повторили всі слова.")
         await cmd_start(callback.message, state)
 
+
 async def done_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
     await state.clear()
     await saved_user_msg[callback.from_user.id].delete_reply_markup()
@@ -49,7 +51,10 @@ async def done_callback(callback: types.CallbackQuery, state: FSMContext) -> Non
 
 
 async def add_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
-    await saved_user_msg[callback.from_user.id].delete_reply_markup()
+    try:
+        await saved_user_msg[callback.from_user.id].delete_reply_markup()
+    except TelegramBadRequest:
+        pass
     reply_text = "Введіть дані в наступному форматі:\nслово - значення"
     msg = await callback.message.answer(
         text=reply_text, reply_markup=ADD_IS_DONE_KEYBAORD
