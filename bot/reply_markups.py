@@ -14,12 +14,10 @@ START_KEYBOARD = InlineKeyboardMarkup(
 
 
 def get_learn_keyboard(card_id):
-    InlineKeyboardMarkup(
+    return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(
-                    text="✔️", callback_data=f"remember {card_id}"
-                ),
+                InlineKeyboardButton(text="✔️", callback_data=f"remember {card_id}"),
                 InlineKeyboardButton(text="❌", callback_data="forget"),
             ]
         ]

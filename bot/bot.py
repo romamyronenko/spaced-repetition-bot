@@ -29,7 +29,8 @@ async def forget_callback(callback: types.CallbackQuery, state: FSMContext) -> N
 
 
 async def learn_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
-    card = db_manager.get_cards_to_check(callback.from_user.id)[0] or None
+    cards = db_manager.get_cards_to_check(callback.from_user.id)
+    card = cards[0] if cards else None
     if card is not None:
 
         await callback.message.answer(
@@ -40,7 +41,6 @@ async def learn_callback(callback: types.CallbackQuery, state: FSMContext) -> No
     else:
         await callback.message.answer(text="На сьогодні ви вже повторили всі слова.")
         await cmd_start(callback.message, state)
-
 
 async def done_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
     await state.clear()
@@ -61,7 +61,9 @@ async def add_callback(callback: types.CallbackQuery, state: FSMContext) -> None
 async def cmd_start(msg: types.Message, state: FSMContext) -> None:
     reply_text = "Привіт, я - бот для запам'ятовування."
 
-    saved_user_msg[msg.from_user.id] = await msg.answer(text=reply_text, reply_markup=START_KEYBOARD)
+    saved_user_msg[msg.from_user.id] = await msg.answer(
+        text=reply_text, reply_markup=START_KEYBOARD
+    )
 
     await state.clear()
 

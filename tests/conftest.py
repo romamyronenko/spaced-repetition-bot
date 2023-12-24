@@ -64,6 +64,7 @@ def callback():
     callback.from_user.id = TEST_USER.id
     return callback
 
+
 @pytest.fixture()
 def state(storage, bot):
     return FSMContext(
