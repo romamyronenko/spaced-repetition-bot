@@ -78,7 +78,7 @@ async def test_add_card_state(message, state):
     saved_msg = AsyncMock()
     saved_msg.text = "some text"
     with mock.patch(
-            "bot.saved_user_msg", new={message.from_user.id: saved_msg}
+        "bot.saved_user_msg", new={message.from_user.id: saved_msg}
     ), mock.patch("bot.db_manager", new=db_manager):
         await add_card_state(message, state)
 
@@ -106,7 +106,7 @@ async def test_remember_callback(callback, state):
     db_manager = AsyncMock()
     callback.data = "remember 1"
     with mock.patch("bot.learn_callback", new=mock_learn_callback), mock.patch(
-            "bot.db_manager", new=db_manager
+        "bot.db_manager", new=db_manager
     ):
         await remember_callback(callback, state)
 
@@ -120,7 +120,7 @@ async def test_done_callback(callback, state):
     mock_cmd_start = AsyncMock()
     callback.message = "msg"
     with mock.patch(
-            "bot.saved_user_msg", new={callback.from_user.id: saved_msg}
+        "bot.saved_user_msg", new={callback.from_user.id: saved_msg}
     ), mock.patch("bot.cmd_start", new=mock_cmd_start):
         await done_callback(callback, state)
 
@@ -153,7 +153,9 @@ async def test_learn_callback(callback, state, db_manager):
 @pytest.mark.asyncio
 async def test_learn_callback_when_no_cards(callback, state, db_manager):
     mock_cmd_start = AsyncMock()
-    with mock.patch("bot.cmd_start", new=mock_cmd_start), mock.patch("bot.db_manager", new=db_manager):
+    with mock.patch("bot.cmd_start", new=mock_cmd_start), mock.patch(
+        "bot.db_manager", new=db_manager
+    ):
         await learn_callback(callback, state)
 
     callback.message.answer.assert_called_with(
