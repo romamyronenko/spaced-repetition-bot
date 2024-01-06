@@ -1,0 +1,26 @@
+version: "3.1"
+
+services:
+  mysql:
+    image: mysql
+    restart: always
+    environment:
+      MYQL_USER: "roma"
+      MYSQL_ROOT_PASSWORD: "1"
+      MYSQL_DATABASE: "spaced_repetition"
+    networks:
+      - my_sql_db
+
+  spaced_repetition_bot:
+    build: .
+    image: spaced_repetition_bot
+    restart: always
+    networks:
+      - my_sql_db
+    depends_on:
+      - mysql
+
+
+networks:
+  my_sql_db:
+    driver: bridge
