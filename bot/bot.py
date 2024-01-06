@@ -1,3 +1,4 @@
+import asyncio
 from aiogram import Bot, Dispatcher, types, Router, F
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, CommandStart
@@ -8,12 +9,12 @@ from aiohttp import web
 
 from db import db_manager
 from form import Form
-from ngrok import get_url
 from reply_markups import ADD_IS_DONE_KEYBAORD, START_KEYBOARD, get_learn_keyboard
 from tk import TOKEN_API
 
 router = Router()
 webhook_path = f"/{TOKEN_API}"
+url = "https://176.36.213.118"
 
 saved_user_msg = {}
 
@@ -33,7 +34,6 @@ async def learn_callback(callback: types.CallbackQuery, state: FSMContext) -> No
     cards = db_manager.get_cards_to_check(callback.from_user.id)
     card = cards[0] if cards else None
     if card is not None:
-
         await callback.message.answer(
             text=f'{card.front_side}\n\n<span class="tg-spoiler">{card.back_side}</span>',
             parse_mode="html",
@@ -102,7 +102,8 @@ async def get_cards(msg: types.Message, state: FSMContext) -> None:
 
 
 async def set_webhook(bot):
-    webhook_uri = f"{get_url()}{webhook_path}"
+    # webhook_uri = f"{get_url()}{webhook_path}"
+    webhook_uri = f"{url}{webhook_path}"
     await bot.set_webhook(webhook_uri)
 
 
@@ -114,17 +115,18 @@ def main() -> None:
     dp = Dispatcher(storage=MemoryStorage())
 
     dp.include_router(router)
-    dp.startup.register(on_startup)
+    # dp.startup.register(on_startup)
     bot = Bot(token=TOKEN_API)
-    app = web.Application()
-    webhook_requests_handler = SimpleRequestHandler(
-        dispatcher=dp,
-        bot=bot,
-    )
-    webhook_requests_handler.register(app, path=webhook_path)
-    setup_application(app, dp, bot=bot)
-
-    web.run_app(app, host="0.0.0.0", port=8080)
+    asyncio.run(dp.start_polling(bot))
+    # app = web.Application()
+    # webhook_requests_handler = SimpleRequestHandler(
+    #     dispatcher=dp,
+    #     bot=bot,
+    # )
+    # webhook_requests_handler.register(app, path=webhook_path)
+    # setup_application(app, dp, bot=bot)
+    #
+    # web.run_app(app, host="0.0.0.0", port=8080)
 
 
 router.message.register(cmd_start, CommandStart())
