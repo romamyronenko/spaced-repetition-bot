@@ -19,6 +19,9 @@ services:
       - my_sql_db
     depends_on:
       - mysql
+    environment:
+      - DB_URI=${DB_URI}
+      - TOKEN_API=${TOKEN_API}
 
 
 networks:
