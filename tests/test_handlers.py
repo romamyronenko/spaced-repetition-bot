@@ -101,20 +101,6 @@ async def test_add_card_state_wrong_value(message, state):
 
 
 @pytest.mark.asyncio
-async def test_remember_callback(callback, state):
-    mock_learn_callback = AsyncMock()
-    db_manager = AsyncMock()
-    callback.data = "remember 1"
-    with mock.patch("bot.learn_callback", new=mock_learn_callback), mock.patch(
-        "bot.db_manager", new=db_manager
-    ):
-        await remember_callback(callback, state)
-
-    db_manager.update_remember.assert_called_with("1")
-    mock_learn_callback.assert_awaited_once()
-
-
-@pytest.mark.asyncio
 async def test_done_callback(callback, state):
     saved_msg = AsyncMock()
     mock_cmd_start = AsyncMock()
@@ -165,7 +151,29 @@ async def test_learn_callback_when_no_cards(callback, state, db_manager):
 
 
 @pytest.mark.asyncio
+async def test_remember_callback(callback, state):
+    mock_learn_callback = AsyncMock()
+    db_manager = AsyncMock()
+    callback.data = "remember 1"
+    with mock.patch("bot.learn_callback", new=mock_learn_callback), mock.patch(
+        "bot.db_manager", new=db_manager
+    ):
+        await remember_callback(callback, state)
+
+    db_manager.update_remember.assert_called_with("1")
+    mock_learn_callback.assert_awaited_once()
+
+
+@pytest.mark.asyncio
 async def test_forget_callback(callback, state):
+
+    mock_forget_callback = AsyncMock()
+    db_manager = AsyncMock()
     callback.data = "forget 11"
-    await forget_callback(callback, state)
-    callback.message.answer.assert_called_with(text=callback.data)
+    with mock.patch("bot.learn_callback", new=mock_forget_callback), mock.patch(
+            "bot.db_manager", new=db_manager
+    ):
+        await forget_callback(callback, state)
+
+    mock_forget_callback.assert_awaited_once()
+    db_manager.update_forget.assert_called_with("11")

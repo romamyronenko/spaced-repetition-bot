@@ -28,6 +28,10 @@ async def remember_callback(callback: types.CallbackQuery, state: FSMContext) ->
 
 async def forget_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
     await callback.message.answer(text=callback.data)
+    card_id = callback.data.split(" ")[-1]
+    db_manager.update_forget(card_id)
+    await learn_callback(callback, state)
+
 
 
 async def learn_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
