@@ -1,17 +1,17 @@
 import asyncio
+import os
+
 from aiogram import Bot, Dispatcher, types, Router, F
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
-from aiohttp import web
 
 from db import db_manager
 from form import Form
 from reply_markups import ADD_IS_DONE_KEYBAORD, START_KEYBOARD, get_learn_keyboard
-from tk import TOKEN_API
 
+TOKEN_API = os.getenv('TOKEN_API')
 router = Router()
 webhook_path = f"/{TOKEN_API}"
 url = "https://176.36.213.118"
@@ -31,7 +31,6 @@ async def forget_callback(callback: types.CallbackQuery, state: FSMContext) -> N
     card_id = callback.data.split(" ")[-1]
     db_manager.update_forget(card_id)
     await learn_callback(callback, state)
-
 
 
 async def learn_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
