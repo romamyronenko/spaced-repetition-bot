@@ -13,6 +13,17 @@ START_KEYBOARD = InlineKeyboardMarkup(
 )
 
 
+def get_start_keyboard(start_message_id):
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="Додати слова", callback_data=f"add {start_message_id}"),
+                InlineKeyboardButton(text="Вчити!", callback_data=f"learn {start_message_id}"),
+            ]
+        ]
+    )
+
+
 def get_learn_keyboard(card_id):
     return InlineKeyboardMarkup(
         inline_keyboard=[

@@ -1,6 +1,5 @@
 import asyncio
 import os
-
 from aiogram import Bot, Dispatcher, types, Router, F
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, CommandStart
@@ -11,18 +10,19 @@ from db import db_manager
 from form import Form
 from reply_markups import ADD_IS_DONE_KEYBAORD, START_KEYBOARD, get_learn_keyboard
 
+
 TOKEN_API = os.getenv("TOKEN_API")
 router = Router()
 webhook_path = f"/{TOKEN_API}"
 url = "https://176.36.213.118"
-
-saved_user_msg = {}
+saved_user_adding_msg = {}
+saved_user_start_msg = {}
 
 
 async def cmd_start(msg: types.Message, state: FSMContext) -> None:
     reply_text = "Привіт, я - бот для запам'ятовування."
 
-    saved_user_msg[msg.from_user.id] = await msg.answer(
+    saved_user_start_msg[msg.from_user.id] = await msg.answer(
         text=reply_text, reply_markup=START_KEYBOARD
     )
 
@@ -51,7 +51,7 @@ async def on_startup(bot):
 class Learn:
     @staticmethod
     async def remember_callback(
-        callback: types.CallbackQuery, state: FSMContext
+            callback: types.CallbackQuery, state: FSMContext
     ) -> None:
         await callback.message.answer(text=callback.data)
         card_id = callback.data.split(" ")[-1]
@@ -67,6 +67,11 @@ class Learn:
 
     @staticmethod
     async def learn_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
+        try:
+            await saved_user_start_msg[callback.from_user.id].delete_reply_markup()
+        except TelegramBadRequest:
+            pass
+
         cards = db_manager.get_cards_to_check(callback.from_user.id)
         card = cards[0] if cards else None
         if card is not None:
@@ -86,20 +91,20 @@ class Add:
     @staticmethod
     async def done_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
         await state.clear()
-        await saved_user_msg[callback.from_user.id].delete_reply_markup()
+        await saved_user_adding_msg[callback.from_user.id].delete_reply_markup()
         await cmd_start(callback.message, state)
 
     @staticmethod
     async def add_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
         try:
-            await saved_user_msg[callback.from_user.id].delete_reply_markup()
+            await saved_user_start_msg[callback.from_user.id].delete_reply_markup()
         except TelegramBadRequest:
             pass
         reply_text = "Введіть дані в наступному форматі:\nслово - значення"
         msg = await callback.message.answer(
             text=reply_text, reply_markup=ADD_IS_DONE_KEYBAORD
         )
-        saved_user_msg[callback.from_user.id] = msg
+        saved_user_adding_msg[callback.from_user.id] = msg
         await state.set_state(Form.add_card)
 
     @staticmethod
@@ -110,8 +115,8 @@ class Add:
         if sep in message:
             front, back = message.split(sep)
             db_manager.add_card(front, back, msg.from_user.id)
-            saved_msg = saved_user_msg[msg.from_user.id]
-            saved_user_msg[msg.from_user.id] = await saved_msg.edit_text(
+            saved_msg = saved_user_adding_msg[msg.from_user.id]
+            saved_user_adding_msg[msg.from_user.id] = await saved_msg.edit_text(
                 text=f"{saved_msg.text}\n{front} - {back}",
                 reply_markup=ADD_IS_DONE_KEYBAORD,
             )

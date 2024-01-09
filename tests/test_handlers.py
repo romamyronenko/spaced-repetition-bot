@@ -8,7 +8,7 @@ from bot import (
     Add,
     cmd_start,
     get_cards,
-    saved_user_msg,
+    saved_user_adding_msg,
 )
 from form import Form
 from patches import (
@@ -25,14 +25,14 @@ engine = create_engine("sqlite://")
 
 @pytest.mark.asyncio
 async def test_start_handler(state, message):
-    assert not saved_user_msg
+    assert not saved_user_adding_msg
     await cmd_start(message, state=state)
 
     message.answer.assert_called_with(
         text="Привіт, я - бот для запам'ятовування.",
         reply_markup=START_KEYBOARD,
     )
-    assert saved_user_msg
+    assert saved_user_adding_msg
 
 
 @pytest.mark.asyncio
