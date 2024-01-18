@@ -1,5 +1,6 @@
 import asyncio
 import os
+import logging
 from aiogram import Bot, Dispatcher, types, Router, F
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, CommandStart
@@ -10,6 +11,9 @@ from db import db_manager
 from form import Form
 from reply_markups import ADD_IS_DONE_KEYBAORD, START_KEYBOARD, get_learn_keyboard
 
+log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+log_filename = 'log.log'
+logging.basicConfig(filename=log_filename, level=logging.DEBUG, format=log_format)
 
 TOKEN_API = os.getenv("TOKEN_API")
 router = Router()
@@ -67,11 +71,6 @@ class Learn:
 
     @staticmethod
     async def learn_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
-        try:
-            await saved_user_start_msg[callback.from_user.id].delete_reply_markup()
-        except TelegramBadRequest:
-            pass
-
         cards = db_manager.get_cards_to_check(callback.from_user.id)
         card = cards[0] if cards else None
         if card is not None:
@@ -80,11 +79,16 @@ class Learn:
                 parse_mode="html",
                 reply_markup=get_learn_keyboard(card.id),
             )
+            try:
+                msg = saved_user_start_msg[callback.from_user.id]
+                logging.debug(f'delete message {msg.message_id}, {msg.text}')
+                await msg.delete_reply_markup()
+            except TelegramBadRequest as e:
+                logging.debug(str(e))
         else:
-            await callback.message.answer(
+            await callback.answer(
                 text="На сьогодні ви вже повторили всі слова."
             )
-            await cmd_start(callback.message, state)
 
 
 class Add:
@@ -98,8 +102,8 @@ class Add:
     async def add_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
         try:
             await saved_user_start_msg[callback.from_user.id].delete_reply_markup()
-        except TelegramBadRequest:
-            pass
+        except TelegramBadRequest as e:
+            logging.debug(str(e))
         reply_text = "Введіть дані в наступному форматі:\nслово - значення"
         msg = await callback.message.answer(
             text=reply_text, reply_markup=ADD_IS_DONE_KEYBAORD
@@ -128,12 +132,14 @@ class Add:
 
 
 def main() -> None:
+    logging.info('starting...')
     dp = Dispatcher(storage=MemoryStorage())
 
     dp.include_router(router)
     # dp.startup.register(on_startup)
     bot = Bot(token=TOKEN_API)
     asyncio.run(dp.start_polling(bot))
+    logging.info('bot started')
     # app = web.Application()
     # webhook_requests_handler = SimpleRequestHandler(
     #     dispatcher=dp,
@@ -156,4 +162,9 @@ router.callback_query.register(Add.done_callback, F.data == "done")
 router.callback_query.register(Add.add_callback, F.data == "add")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logging.error(str(e))
+        logging.info('bot stopped')
+        raise e

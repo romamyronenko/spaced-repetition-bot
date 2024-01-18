@@ -10,6 +10,8 @@ services:
       MYSQL_DATABASE: "spaced_repetition"
     networks:
       - my_sql_db
+    volumes:
+      - my_bot:/var/lib/mysql
 
   spaced_repetition_bot:
     build: .
@@ -27,3 +29,7 @@ services:
 networks:
   my_sql_db:
     driver: bridge
+
+
+volumes:
+  my_bot:
