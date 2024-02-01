@@ -1,16 +1,21 @@
 import asyncio
 import logging
+from typing import TYPE_CHECKING
 
-from aiogram import Bot, Dispatcher, types, Router, F
-from aiogram.exceptions import TelegramBadRequest
+from aiogram import Bot, Dispatcher, Router, F
 from aiogram.filters import Command, CommandStart
-from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from _redis_funcs import save_msg_data_to_redis, get_msg_data_from_redis
+from _message_editors import delete_reply_markup_start_message, update_text_saved_add_message, \
+    delete_reply_markup_add_message
+from _redis_funcs import save_msg_data_to_redis
 from db import db_manager
-from form import Form
+from _form import Form
 from reply_markups import ADD_IS_DONE_KEYBAORD, START_KEYBOARD, get_learn_keyboard
+
+if TYPE_CHECKING:
+    from aiogram import types
+    from aiogram.fsm.context import FSMContext
 
 log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 log_filename = "log.log"
@@ -20,47 +25,7 @@ TOKEN_API = '6565012469:AAF-pJseizPhXK1Fvao55WLuX2LkUu6X4sQ'
 router = Router()
 
 
-async def delete_reply_markup_start_message(bot, user_id):
-    msg_data = await get_msg_data_from_redis("start", user_id)
-    msg_id = msg_data["message_id"]
-    chat_id = msg_data["chat_id"]
-    logging.debug(f"delete message {msg_id} from chat {chat_id}")
-    try:
-        await bot.edit_message_reply_markup(chat_id, msg_id)
-    except TelegramBadRequest as e:
-        logging.debug(str(e))
-
-
-async def update_text_saved_add_message(bot, user_id, text_to_add):
-    msg_data = await get_msg_data_from_redis("add", user_id)
-    msg_id = msg_data["message_id"]
-    chat_id = msg_data["chat_id"]
-    text = msg_data["text"]
-    try:
-        msg = await bot.edit_message_text(
-            text=f"{text}\n{text_to_add}",
-            chat_id=chat_id,
-            message_id=msg_id,
-            reply_markup=ADD_IS_DONE_KEYBAORD,
-        )
-
-        await save_msg_data_to_redis("add", msg)
-    except TelegramBadRequest as e:
-        logging.debug(str(e))
-
-
-async def delete_reply_markup_add_message(bot, user_id):
-    msg_data = await get_msg_data_from_redis("add", user_id)
-    msg_id = msg_data["message_id"]
-    chat_id = msg_data["chat_id"]
-    logging.debug(f"delete message {msg_id} from chat {chat_id}")
-    try:
-        await bot.edit_message_reply_markup(chat_id, msg_id)
-    except TelegramBadRequest as e:
-        logging.debug(str(e))
-
-
-async def cmd_start(msg: types.Message, state: FSMContext) -> None:
+async def cmd_start(msg: "types.Message", state: "FSMContext") -> None:
     reply_text = "Привіт, я - бот для запам'ятовування."
 
     message = await msg.answer(text=reply_text, reply_markup=START_KEYBOARD)
@@ -70,7 +35,7 @@ async def cmd_start(msg: types.Message, state: FSMContext) -> None:
     await state.clear()
 
 
-async def get_cards(msg: types.Message, state: FSMContext) -> None:
+async def get_cards(msg: "types.Message", _: "FSMContext") -> None:
     cards = db_manager.get_all_cards(msg.from_user.id)
     if cards:
         message = "\n".join([str(card) for card in cards])
@@ -82,7 +47,7 @@ async def get_cards(msg: types.Message, state: FSMContext) -> None:
 class Learn:
     @staticmethod
     async def remember_callback(
-            callback: types.CallbackQuery, state: FSMContext
+            callback: "types.CallbackQuery", state: "FSMContext"
     ) -> None:
         await callback.message.answer(text=callback.data)
         card_id = callback.data.split(" ")[-1]
@@ -90,14 +55,14 @@ class Learn:
         await Learn.learn_callback(callback, state)
 
     @staticmethod
-    async def forget_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
+    async def forget_callback(callback: "types.CallbackQuery", state: "FSMContext") -> None:
         await callback.message.answer(text=callback.data)
         card_id = callback.data.split(" ")[-1]
         db_manager.update_forget(card_id)
         await Learn.learn_callback(callback, state)
 
     @staticmethod
-    async def learn_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
+    async def learn_callback(callback: "types.CallbackQuery", _: "FSMContext") -> None:
         card = db_manager.get_card_to_check(callback.from_user.id)
         if card is not None:
             await callback.message.answer(
@@ -112,13 +77,13 @@ class Learn:
 
 class Add:
     @staticmethod
-    async def done_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
+    async def done_callback(callback: "types.CallbackQuery", state: "FSMContext") -> None:
         await state.clear()
         await delete_reply_markup_add_message(callback.bot, callback.from_user.id)
         await cmd_start(callback.message, state)
 
     @staticmethod
-    async def add_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
+    async def add_callback(callback: "types.CallbackQuery", state: "FSMContext") -> None:
         await delete_reply_markup_start_message(callback.bot, callback.from_user.id)
         reply_text = "Введіть дані в наступному форматі:\nслово - значення"
         msg = await callback.message.answer(
@@ -128,7 +93,7 @@ class Add:
         await state.set_state(Form.add_card)
 
     @staticmethod
-    async def add_card_state(msg: types.Message, state: FSMContext) -> None:
+    async def add_card_state(msg: "types.Message", state: "FSMContext") -> None:
         message = msg.text
 
         sep = " - "

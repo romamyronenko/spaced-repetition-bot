@@ -9,7 +9,7 @@ from bot import (
     get_cards,
     cmd_start,
 )
-from form import Form
+from _form import Form
 from patches import (
     patch_db_manager,
     patch_cmd_start,
