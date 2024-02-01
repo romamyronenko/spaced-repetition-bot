@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from typing import TYPE_CHECKING
 
 from aiogram import Bot, Dispatcher, Router, F
@@ -11,7 +12,8 @@ from _message_editors import delete_reply_markup_start_message, update_text_save
 from _redis_funcs import save_msg_data_to_redis
 from db import db_manager
 from _form import Form
-from reply_markups import ADD_IS_DONE_KEYBAORD, START_KEYBOARD, get_learn_keyboard
+import handlers
+from reply_markups import ADD_IS_DONE_KEYBAORD, get_learn_keyboard
 
 if TYPE_CHECKING:
     from aiogram import types
@@ -21,27 +23,8 @@ log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 log_filename = "log.log"
 logging.basicConfig(filename=log_filename, level=logging.DEBUG, format=log_format)
 
-TOKEN_API = '6565012469:AAF-pJseizPhXK1Fvao55WLuX2LkUu6X4sQ'
+TOKEN_API = os.getenv("TOKEN_API")
 router = Router()
-
-
-async def cmd_start(msg: "types.Message", state: "FSMContext") -> None:
-    reply_text = "Привіт, я - бот для запам'ятовування."
-
-    message = await msg.answer(text=reply_text, reply_markup=START_KEYBOARD)
-
-    await save_msg_data_to_redis("start", message)
-
-    await state.clear()
-
-
-async def get_cards(msg: "types.Message", _: "FSMContext") -> None:
-    cards = db_manager.get_all_cards(msg.from_user.id)
-    if cards:
-        message = "\n".join([str(card) for card in cards])
-    else:
-        message = "У вас немає карток."
-    await msg.answer(text=message)
 
 
 class Learn:
@@ -80,7 +63,7 @@ class Add:
     async def done_callback(callback: "types.CallbackQuery", state: "FSMContext") -> None:
         await state.clear()
         await delete_reply_markup_add_message(callback.bot, callback.from_user.id)
-        await cmd_start(callback.message, state)
+        await handlers.cmd_start(callback.message, state)
 
     @staticmethod
     async def add_callback(callback: "types.CallbackQuery", state: "FSMContext") -> None:
@@ -119,8 +102,8 @@ def main() -> None:
     logging.info("bot started")
 
 
-router.message.register(cmd_start, CommandStart())
-router.message.register(get_cards, Command("get_cards"))
+router.message.register(handlers.cmd_start, CommandStart())
+router.message.register(handlers.get_cards, Command("get_cards"))
 router.message.register(Add.add_card_state, Form.add_card)
 
 router.callback_query.register(Learn.remember_callback, F.data.startswith("remember"))

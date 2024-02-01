@@ -6,15 +6,15 @@ from sqlalchemy import create_engine
 from bot import (
     Learn,
     Add,
-    get_cards,
-    cmd_start,
 )
+from handlers.cmd_get_cards import get_cards
+from handlers.cmd_start import cmd_start
 from _form import Form
 from patches import (
     patch_db_manager,
     patch_cmd_start,
     patch_learn_callback,
-    patch_redis,
+    patch_redis, patch_db_manager_get_cards,
 )
 from reply_markups import ADD_IS_DONE_KEYBAORD, get_learn_keyboard, START_KEYBOARD
 from tests.utils import TEST_USER
@@ -48,7 +48,7 @@ async def test_get_cards(state, message, db_manager):
     for front, back in (("1", "2"), ("front", "back")):
         db_manager.add_card(front, back, TEST_USER.id)
 
-    with patch_db_manager(db_manager):
+    with patch_db_manager_get_cards(db_manager):
         await get_cards(message, state)
 
     message.answer.assert_called_with(
