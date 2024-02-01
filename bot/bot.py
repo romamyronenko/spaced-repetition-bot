@@ -1,14 +1,13 @@
 import asyncio
 import logging
-import os
 
-import redis.asyncio as redis
 from aiogram import Bot, Dispatcher, types, Router, F
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
 
+from _redis_funcs import save_msg_data_to_redis, get_msg_data_from_redis
 from db import db_manager
 from form import Form
 from reply_markups import ADD_IS_DONE_KEYBAORD, START_KEYBOARD, get_learn_keyboard
@@ -19,22 +18,6 @@ logging.basicConfig(filename=log_filename, level=logging.DEBUG, format=log_forma
 
 TOKEN_API = '6565012469:AAF-pJseizPhXK1Fvao55WLuX2LkUu6X4sQ'
 router = Router()
-redis_host = os.getenv("MY_REDIS_HOST", "localhost")
-r = redis.Redis(host=redis_host, decode_responses=True)
-
-
-async def save_msg_data_to_redis(msg_name, msg):
-    print(f"saved {msg.text}")
-    user_id = msg.chat.id
-    msg_data = {"chat_id": msg.chat.id, "message_id": msg.message_id, "text": msg.text}
-
-    await r.hset(f"saved_messages:{msg_name}:{user_id}", mapping=msg_data)
-
-
-async def get_msg_data_from_redis(msg_name, user_id):
-    msg = await r.hgetall(f"saved_messages:{msg_name}:{user_id}")
-    print("get", msg)
-    return msg
 
 
 async def delete_reply_markup_start_message(bot, user_id):
