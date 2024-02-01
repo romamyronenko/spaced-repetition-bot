@@ -1,6 +1,8 @@
 import asyncio
-import os
 import logging
+import os
+
+import redis.asyncio as redis
 from aiogram import Bot, Dispatcher, types, Router, F
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, CommandStart
@@ -11,24 +13,88 @@ from db import db_manager
 from form import Form
 from reply_markups import ADD_IS_DONE_KEYBAORD, START_KEYBOARD, get_learn_keyboard
 
-log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-log_filename = 'log.log'
+log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+log_filename = "log.log"
 logging.basicConfig(filename=log_filename, level=logging.DEBUG, format=log_format)
 
 TOKEN_API = os.getenv("TOKEN_API")
 router = Router()
 webhook_path = f"/{TOKEN_API}"
 url = "https://176.36.213.118"
-saved_user_adding_msg = {}
-saved_user_start_msg = {}
+redis_host = os.getenv("MY_REDIS_HOST", "localhost")
+r = redis.Redis(host=redis_host, decode_responses=True)
+
+
+async def set_webhook(bot):
+    # webhook_uri = f"{get_url()}{webhook_path}"
+    webhook_uri = f"{url}{webhook_path}"
+    await bot.set_webhook(webhook_uri)
+
+
+async def on_startup(bot):
+    await set_webhook(bot)
+
+
+async def save_msg_data_to_redis(msg_name, msg):
+    print(f"saved {msg.text}")
+    user_id = msg.chat.id
+    msg_data = {"chat_id": msg.chat.id, "message_id": msg.message_id, "text": msg.text}
+
+    await r.hset(f"saved_messages:{msg_name}:{user_id}", mapping=msg_data)
+
+
+async def get_msg_data_from_redis(msg_name, user_id):
+    msg = await r.hgetall(f"saved_messages:{msg_name}:{user_id}")
+    print("get", msg)
+    return msg
+
+
+async def delete_reply_markup_start_message(bot, user_id):
+    msg_data = await get_msg_data_from_redis("start", user_id)
+    msg_id = msg_data["message_id"]
+    chat_id = msg_data["chat_id"]
+    logging.debug(f"delete message {msg_id} from chat {chat_id}")
+    try:
+        await bot.edit_message_reply_markup(chat_id, msg_id)
+    except TelegramBadRequest as e:
+        logging.debug(str(e))
+
+
+async def update_text_saved_add_message(bot, user_id, text_to_add):
+    msg_data = await get_msg_data_from_redis("add", user_id)
+    msg_id = msg_data["message_id"]
+    chat_id = msg_data["chat_id"]
+    text = msg_data["text"]
+    try:
+        msg = await bot.edit_message_text(
+            text=f"{text}\n{text_to_add}",
+            chat_id=chat_id,
+            message_id=msg_id,
+            reply_markup=ADD_IS_DONE_KEYBAORD,
+        )
+
+        await save_msg_data_to_redis("add", msg)
+    except TelegramBadRequest as e:
+        logging.debug(str(e))
+
+
+async def delete_reply_markup_add_message(bot, user_id):
+    msg_data = await get_msg_data_from_redis("add", user_id)
+    msg_id = msg_data["message_id"]
+    chat_id = msg_data["chat_id"]
+    logging.debug(f"delete message {msg_id} from chat {chat_id}")
+    try:
+        await bot.edit_message_reply_markup(chat_id, msg_id)
+    except TelegramBadRequest as e:
+        logging.debug(str(e))
 
 
 async def cmd_start(msg: types.Message, state: FSMContext) -> None:
     reply_text = "Привіт, я - бот для запам'ятовування."
 
-    saved_user_start_msg[msg.from_user.id] = await msg.answer(
-        text=reply_text, reply_markup=START_KEYBOARD
-    )
+    message = await msg.answer(text=reply_text, reply_markup=START_KEYBOARD)
+
+    await save_msg_data_to_redis("start", message)
 
     await state.clear()
 
@@ -42,20 +108,10 @@ async def get_cards(msg: types.Message, state: FSMContext) -> None:
     await msg.answer(text=message)
 
 
-async def set_webhook(bot):
-    # webhook_uri = f"{get_url()}{webhook_path}"
-    webhook_uri = f"{url}{webhook_path}"
-    await bot.set_webhook(webhook_uri)
-
-
-async def on_startup(bot):
-    await set_webhook(bot)
-
-
 class Learn:
     @staticmethod
     async def remember_callback(
-            callback: types.CallbackQuery, state: FSMContext
+        callback: types.CallbackQuery, state: FSMContext
     ) -> None:
         await callback.message.answer(text=callback.data)
         card_id = callback.data.split(" ")[-1]
@@ -71,44 +127,33 @@ class Learn:
 
     @staticmethod
     async def learn_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
-        cards = db_manager.get_cards_to_check(callback.from_user.id)
-        card = cards[0] if cards else None
+        card = db_manager.get_card_to_check(callback.from_user.id)
         if card is not None:
             await callback.message.answer(
                 text=f'{card.front_side}\n\n<span class="tg-spoiler">{card.back_side}</span>',
                 parse_mode="html",
                 reply_markup=get_learn_keyboard(card.id),
             )
-            try:
-                msg = saved_user_start_msg[callback.from_user.id]
-                logging.debug(f'delete message {msg.message_id}, {msg.text}')
-                await msg.delete_reply_markup()
-            except TelegramBadRequest as e:
-                logging.debug(str(e))
+            await delete_reply_markup_start_message(callback.bot, callback.from_user.id)
         else:
-            await callback.answer(
-                text="На сьогодні ви вже повторили всі слова."
-            )
+            await callback.answer(text="На сьогодні ви вже повторили всі слова.")
 
 
 class Add:
     @staticmethod
     async def done_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
         await state.clear()
-        await saved_user_adding_msg[callback.from_user.id].delete_reply_markup()
+        await delete_reply_markup_add_message(callback.bot, callback.from_user.id)
         await cmd_start(callback.message, state)
 
     @staticmethod
     async def add_callback(callback: types.CallbackQuery, state: FSMContext) -> None:
-        try:
-            await saved_user_start_msg[callback.from_user.id].delete_reply_markup()
-        except TelegramBadRequest as e:
-            logging.debug(str(e))
+        await delete_reply_markup_start_message(callback.bot, callback.from_user.id)
         reply_text = "Введіть дані в наступному форматі:\nслово - значення"
         msg = await callback.message.answer(
             text=reply_text, reply_markup=ADD_IS_DONE_KEYBAORD
         )
-        saved_user_adding_msg[callback.from_user.id] = msg
+        await save_msg_data_to_redis("add", msg)
         await state.set_state(Form.add_card)
 
     @staticmethod
@@ -117,13 +162,10 @@ class Add:
 
         sep = " - "
         if sep in message:
+            bot = msg.bot
             front, back = message.split(sep)
+            await update_text_saved_add_message(bot, msg.from_user.id, message)
             db_manager.add_card(front, back, msg.from_user.id)
-            saved_msg = saved_user_adding_msg[msg.from_user.id]
-            saved_user_adding_msg[msg.from_user.id] = await saved_msg.edit_text(
-                text=f"{saved_msg.text}\n{front} - {back}",
-                reply_markup=ADD_IS_DONE_KEYBAORD,
-            )
             await msg.delete()
 
         else:
@@ -132,14 +174,14 @@ class Add:
 
 
 def main() -> None:
-    logging.info('starting...')
+    logging.info("starting...")
     dp = Dispatcher(storage=MemoryStorage())
 
     dp.include_router(router)
     # dp.startup.register(on_startup)
     bot = Bot(token=TOKEN_API)
     asyncio.run(dp.start_polling(bot))
-    logging.info('bot started')
+    logging.info("bot started")
     # app = web.Application()
     # webhook_requests_handler = SimpleRequestHandler(
     #     dispatcher=dp,
@@ -166,5 +208,5 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         logging.error(str(e))
-        logging.info('bot stopped')
+        logging.info("bot stopped")
         raise e

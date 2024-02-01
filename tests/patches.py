@@ -1,4 +1,5 @@
 from unittest import mock
+from unittest.mock import MagicMock
 
 
 def make_patch_by_path(path):
@@ -9,6 +10,7 @@ def make_patch_by_path(path):
 
 
 patch_db_manager = make_patch_by_path("bot.db_manager")
+patch_redis = make_patch_by_path("bot.r")
 patch_cmd_start = make_patch_by_path("bot.cmd_start")
 patch_learn_callback = make_patch_by_path("bot.Learn.learn_callback")
 patch_saved_user_msg = make_patch_by_path("bot.saved_user_msg")

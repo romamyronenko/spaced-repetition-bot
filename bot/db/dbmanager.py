@@ -64,3 +64,7 @@ class DBManager:
         )
         cards = self._session.scalars(stmt).all()
         return cards
+
+    def get_card_to_check(self, user_id):
+        cards = self.get_cards_to_check(user_id)
+        return cards[0] if cards else None
