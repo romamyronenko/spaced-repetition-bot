@@ -17,22 +17,10 @@ log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 log_filename = "log.log"
 logging.basicConfig(filename=log_filename, level=logging.DEBUG, format=log_format)
 
-TOKEN_API = os.getenv("TOKEN_API")
+TOKEN_API = '6565012469:AAF-pJseizPhXK1Fvao55WLuX2LkUu6X4sQ'
 router = Router()
-webhook_path = f"/{TOKEN_API}"
-url = "https://176.36.213.118"
 redis_host = os.getenv("MY_REDIS_HOST", "localhost")
 r = redis.Redis(host=redis_host, decode_responses=True)
-
-
-async def set_webhook(bot):
-    # webhook_uri = f"{get_url()}{webhook_path}"
-    webhook_uri = f"{url}{webhook_path}"
-    await bot.set_webhook(webhook_uri)
-
-
-async def on_startup(bot):
-    await set_webhook(bot)
 
 
 async def save_msg_data_to_redis(msg_name, msg):
@@ -111,7 +99,7 @@ async def get_cards(msg: types.Message, state: FSMContext) -> None:
 class Learn:
     @staticmethod
     async def remember_callback(
-        callback: types.CallbackQuery, state: FSMContext
+            callback: types.CallbackQuery, state: FSMContext
     ) -> None:
         await callback.message.answer(text=callback.data)
         card_id = callback.data.split(" ")[-1]
@@ -178,19 +166,9 @@ def main() -> None:
     dp = Dispatcher(storage=MemoryStorage())
 
     dp.include_router(router)
-    # dp.startup.register(on_startup)
     bot = Bot(token=TOKEN_API)
     asyncio.run(dp.start_polling(bot))
     logging.info("bot started")
-    # app = web.Application()
-    # webhook_requests_handler = SimpleRequestHandler(
-    #     dispatcher=dp,
-    #     bot=bot,
-    # )
-    # webhook_requests_handler.register(app, path=webhook_path)
-    # setup_application(app, dp, bot=bot)
-    #
-    # web.run_app(app, host="0.0.0.0", port=8080)
 
 
 router.message.register(cmd_start, CommandStart())
