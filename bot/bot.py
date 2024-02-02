@@ -6,9 +6,9 @@ from aiogram import Bot, Dispatcher, Router, F
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from . import handlers
-from ._form import Form
-from .handlers import (
+import handlers
+from _form import Form
+from handlers import (
     remember_callback,
     forget_callback,
     learn_callback,
