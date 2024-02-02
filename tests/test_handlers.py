@@ -4,15 +4,21 @@ import pytest
 from sqlalchemy import create_engine
 
 from _form import Form
-from handlers import Learn
+from handlers import (
+    remember_callback,
+    forget_callback,
+    learn_callback,
+    add_callback,
+    add_card_state,
+    done_callback,
+    cmd_start,
+    get_cards,
+)
 from handlers._reply_markups import (
     ADD_IS_DONE_KEYBAORD,
     get_learn_keyboard,
     START_KEYBOARD,
 )
-from handlers.cmd_get_cards import get_cards
-from handlers.cmd_start import cmd_start
-from handlers.scenario_add import Add
 from patches import (
     patch_db_manager,
     patch_cmd_start,
@@ -84,7 +90,7 @@ class TestLearn:
             db_manager.add_card(*card, callback.from_user.id)
 
         with patch_db_manager_learn(db_manager), patch_redis(AsyncMock()):
-            await Learn.learn_callback(callback, state)
+            await learn_callback(callback, state)
 
         callback.message.answer.assert_called_with(
             text='front1\n\n<span class="tg-spoiler">back1</span>',
@@ -98,7 +104,7 @@ class TestLearn:
         with patch_cmd_start(mock_cmd_start), patch_db_manager(db_manager), patch_redis(
             AsyncMock()
         ):
-            await Learn.learn_callback(callback, state)
+            await learn_callback(callback, state)
 
         callback.answer.assert_called_with(
             text="На сьогодні ви вже повторили всі слова."
@@ -112,7 +118,7 @@ class TestLearn:
         with patch_learn_callback(mock_learn_callback), patch_db_manager_learn(
             db_manager
         ), patch_redis(AsyncMock()):
-            await Learn.remember_callback(callback, state)
+            await remember_callback(callback, state)
 
         db_manager.update_remember.assert_called_with("1")
         mock_learn_callback.assert_awaited_once()
@@ -125,7 +131,7 @@ class TestLearn:
         with patch_learn_callback(mock_forget_callback), patch_db_manager_learn(
             db_manager
         ):
-            await Learn.forget_callback(callback, state)
+            await forget_callback(callback, state)
 
         mock_forget_callback.assert_awaited_once()
         db_manager.update_forget.assert_called_with("11")
@@ -149,7 +155,7 @@ class TestAdd:
         with patch_redis(AsyncMock()) as r:
             r.hgetall.return_value = {"message_id": 1, "chat_id": 1, "text": "sadf"}
 
-            await Add.add_callback(callback, state)
+            await add_callback(callback, state)
 
         callback.message.answer.assert_called_with(
             text="Введіть дані в наступному форматі:\nслово - значення",
@@ -168,7 +174,7 @@ class TestAdd:
                 "chat_id": 1,
                 "text": "some text",
             }
-            await Add.add_card_state(message, state)
+            await add_card_state(message, state)
 
         message.bot.edit_message_text.assert_called_with(
             text="some text\nfront - back",
@@ -183,7 +189,7 @@ class TestAdd:
     async def test_add_card_state_wrong_value(self, message, state, db_manager):
         message.text = "wrong"
         with patch_db_manager(db_manager):
-            await Add.add_card_state(message, state)
+            await add_card_state(message, state)
 
         message.answer.assert_awaited_with("Невірний формат")
         assert await state.get_state() is None
@@ -197,7 +203,7 @@ class TestAdd:
                 "text": "some text",
             }
 
-            await Add.done_callback(callback, state)
+            await done_callback(callback, state)
 
         callback.bot.edit_message_reply_markup.assert_awaited_once()
         mock_cmd_start.assert_awaited_with(callback.message, state)

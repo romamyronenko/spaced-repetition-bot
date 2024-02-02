@@ -10,41 +10,35 @@ if TYPE_CHECKING:
     from aiogram.fsm.context import FSMContext
 
 
-class Learn:
-    @staticmethod
-    async def remember_callback(
-        callback: "types.CallbackQuery", state: "FSMContext"
-    ) -> None:
-        await callback.message.answer(text=callback.data)
+async def remember_callback(
+    callback: "types.CallbackQuery", state: "FSMContext"
+) -> None:
+    await callback.message.answer(text=callback.data)
 
-        card_id = _get_card_id_from_callback(callback)
-        db_manager.update_remember(card_id)
+    card_id = _get_card_id_from_callback(callback)
+    db_manager.update_remember(card_id)
 
-        await Learn.learn_callback(callback, state)
+    await learn_callback(callback, state)
 
-    @staticmethod
-    async def forget_callback(
-        callback: "types.CallbackQuery", state: "FSMContext"
-    ) -> None:
-        await callback.message.answer(text=callback.data)
 
-        card_id = _get_card_id_from_callback(callback)
-        db_manager.update_forget(card_id)
+async def forget_callback(callback: "types.CallbackQuery", state: "FSMContext") -> None:
+    await callback.message.answer(text=callback.data)
 
-        await Learn.learn_callback(callback, state)
+    card_id = _get_card_id_from_callback(callback)
+    db_manager.update_forget(card_id)
 
-    @staticmethod
-    async def learn_callback(
-        callback: "types.CallbackQuery", state: "FSMContext"
-    ) -> None:
-        card = db_manager.get_card_to_check(callback.from_user.id)
+    await learn_callback(callback, state)
 
-        if card is not None:
-            await _send_card_message(callback, card)
-            await delete_reply_markup_start_message(callback.bot, callback.from_user.id)
 
-        else:
-            await callback.answer(text=NO_CARDS_TO_LEARN_MSG)
+async def learn_callback(callback: "types.CallbackQuery", state: "FSMContext") -> None:
+    card = db_manager.get_card_to_check(callback.from_user.id)
+
+    if card is not None:
+        await _send_card_message(callback, card)
+        await delete_reply_markup_start_message(callback.bot, callback.from_user.id)
+
+    else:
+        await callback.answer(text=NO_CARDS_TO_LEARN_MSG)
 
 
 async def _send_card_message(callback, card):

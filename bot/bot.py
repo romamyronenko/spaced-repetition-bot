@@ -8,7 +8,14 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from . import handlers
 from ._form import Form
-from .handlers import Learn, Add
+from .handlers import (
+    remember_callback,
+    forget_callback,
+    learn_callback,
+    add_callback,
+    add_card_state,
+    done_callback,
+)
 
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 LOG_FILENAME = "log.log"
@@ -20,15 +27,15 @@ router = Router()
 msg_handlers = (
     (handlers.cmd_start, CommandStart()),
     (handlers.get_cards, Command("get_cards")),
-    (Add.add_card_state, Form.add_card),
+    (add_card_state, Form.add_card),
 )
 
 callback_handlers = (
-    (Learn.remember_callback, F.data.startswith("remember")),
-    (Learn.forget_callback, F.data.startswith("forget")),
-    (Learn.learn_callback, F.data == "learn"),
-    (Add.done_callback, F.data == "done"),
-    (Add.add_callback, F.data == "add"),
+    (remember_callback, F.data.startswith("remember")),
+    (forget_callback, F.data.startswith("forget")),
+    (learn_callback, F.data == "learn"),
+    (done_callback, F.data == "done"),
+    (add_callback, F.data == "add"),
 )
 
 for func, template in msg_handlers:
