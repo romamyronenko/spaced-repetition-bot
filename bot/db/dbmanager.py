@@ -9,6 +9,8 @@ DATE_FORMAT = "%Y-%m-%d"
 MAX_INTERVAL = 31
 
 
+# TODO: add type annotations
+
 class DBManager:
     def __init__(self, engine):
         self._engine = engine

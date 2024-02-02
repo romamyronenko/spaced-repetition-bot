@@ -1,8 +1,11 @@
-from aiogram import types
-from aiogram.fsm.context import FSMContext
+from typing import TYPE_CHECKING
 
 from _redis_funcs import save_msg_data_to_redis
-from reply_markups import START_KEYBOARD
+from _reply_markups import START_KEYBOARD
+
+if TYPE_CHECKING:
+    from aiogram import types
+    from aiogram.fsm.context import FSMContext
 
 
 async def cmd_start(msg: "types.Message", state: "FSMContext") -> None:

@@ -3,10 +3,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from sqlalchemy import create_engine
 
-from bot import (
-    Learn,
-    Add,
-)
+from handlers import Learn
+from handlers.scenario_add import Add
 from handlers.cmd_get_cards import get_cards
 from handlers.cmd_start import cmd_start
 from _form import Form
@@ -14,9 +12,9 @@ from patches import (
     patch_db_manager,
     patch_cmd_start,
     patch_learn_callback,
-    patch_redis, patch_db_manager_get_cards,
+    patch_redis, patch_db_manager_get_cards, patch_db_manager_add, patch_db_manager_learn,
 )
-from reply_markups import ADD_IS_DONE_KEYBAORD, get_learn_keyboard, START_KEYBOARD
+from _reply_markups import ADD_IS_DONE_KEYBAORD, get_learn_keyboard, START_KEYBOARD
 from tests.utils import TEST_USER
 
 engine = create_engine("sqlite://")
@@ -78,7 +76,7 @@ class TestLearn:
         for card in cards:
             db_manager.add_card(*card, callback.from_user.id)
 
-        with patch_db_manager(db_manager), patch_redis(AsyncMock()):
+        with patch_db_manager_learn(db_manager), patch_redis(AsyncMock()):
             await Learn.learn_callback(callback, state)
 
         callback.message.answer.assert_called_with(
@@ -91,7 +89,7 @@ class TestLearn:
     async def test_learn_callback_when_no_cards(self, callback, state, db_manager):
         mock_cmd_start = AsyncMock()
         with patch_cmd_start(mock_cmd_start), patch_db_manager(db_manager), patch_redis(
-            AsyncMock()
+                AsyncMock()
         ):
             await Learn.learn_callback(callback, state)
 
@@ -104,7 +102,7 @@ class TestLearn:
         mock_learn_callback, db_manager = AsyncMock(), AsyncMock()
 
         callback.data = "remember 1"
-        with patch_learn_callback(mock_learn_callback), patch_db_manager(db_manager):
+        with patch_learn_callback(mock_learn_callback), patch_db_manager_learn(db_manager):
             await Learn.remember_callback(callback, state)
 
         db_manager.update_remember.assert_called_with("1")
@@ -115,7 +113,7 @@ class TestLearn:
         mock_forget_callback = AsyncMock()
         db_manager = AsyncMock()
         callback.data = "forget 11"
-        with patch_learn_callback(mock_forget_callback), patch_db_manager(db_manager):
+        with patch_learn_callback(mock_forget_callback), patch_db_manager_learn(db_manager):
             await Learn.forget_callback(callback, state)
 
         mock_forget_callback.assert_awaited_once()
@@ -153,7 +151,7 @@ class TestAdd:
     async def test_add_card_state(self, message, state):
         db_manager = MagicMock()
         message.text = "front - back"
-        with patch_db_manager(db_manager), patch_redis(AsyncMock()) as r:
+        with patch_db_manager_add(db_manager), patch_redis(AsyncMock()) as r:
             r.hgetall.return_value = {
                 "message_id": 1,
                 "chat_id": 1,
