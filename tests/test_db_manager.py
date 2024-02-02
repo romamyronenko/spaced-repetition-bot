@@ -54,7 +54,7 @@ class TestDBManagerTest(DBTestHelper):
         self.add_card(self.TEST_CARD_DATA)
 
         db_manager.remove_card(
-            owner=self.TEST_CARD_DATA["owner"],
+            user_id=self.TEST_CARD_DATA["owner"],
             front_side=self.TEST_CARD_DATA["front_side"],
         )
 

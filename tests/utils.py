@@ -1,3 +1,7 @@
+"""
+Objects for tests
+"""
+
 from aiogram.types import User, Chat
 
 TEST_USER = User(

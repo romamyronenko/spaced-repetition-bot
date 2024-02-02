@@ -13,7 +13,12 @@ START_KEYBOARD = InlineKeyboardMarkup(
 )
 
 
-def get_learn_keyboard(card_id):
+def get_learn_keyboard(card_id: int) -> "InlineKeyboardMarkup":
+    """
+    Keyboard for learn message. Has two buttons for 'remember' and 'forget' actions
+    :param card_id: id of the card
+    :return:
+    """
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [

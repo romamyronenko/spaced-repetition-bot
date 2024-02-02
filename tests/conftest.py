@@ -1,4 +1,5 @@
 import asyncio
+import os
 from unittest.mock import AsyncMock
 
 import pytest
@@ -11,7 +12,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from db import Base, DBManager
-from tests.mocked_bot import MockedBot
+from mocked_bot import MockedBot
 from utils import TEST_USER, TEST_USER_CHAT
 
 engine = create_engine("sqlite://")

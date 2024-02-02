@@ -1,0 +1,46 @@
+version: "3.1"
+
+services:
+  mysql:
+    image: mysql
+    restart: always
+    environment:
+      MYQL_USER: "roma"
+      MYSQL_ROOT_PASSWORD: "1"
+      MYSQL_DATABASE: "spaced_repetition"
+    networks:
+      - sr_bot_network
+    volumes:
+      - my_bot:/var/lib/mysql
+
+  redis:
+    image: redis
+    networks:
+      - sr_bot_network
+    restart: always
+    volumes:
+      - my_bot:/root/redis
+      - my_bot:/usr/local/etc/redis/redis.conf
+
+  spaced_repetition_bot:
+    build: .
+    image: spaced_repetition_bot
+    restart: always
+    networks:
+      - sr_bot_network
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      - DB_URI=${DB_URI}
+      - TOKEN_API=${TOKEN_API}
+      - MY_REDIS_HOST=${MY_REDIS_HOST}
+
+
+networks:
+  sr_bot_network:
+    driver: bridge
+
+
+volumes:
+  my_bot:
