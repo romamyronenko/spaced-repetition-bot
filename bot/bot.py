@@ -11,24 +11,12 @@ from _form import Form
 from handlers import Learn
 from handlers.scenario_add import Add
 
-# TODO: add pre-commit
 log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 log_filename = "log.log"
 logging.basicConfig(filename=log_filename, level=logging.DEBUG, format=log_format)
 
 TOKEN_API = os.getenv("TOKEN_API")
 router = Router()
-
-
-def main() -> None:
-    logging.info("starting...")
-    dp = Dispatcher(storage=MemoryStorage())
-
-    dp.include_router(router)
-    bot = Bot(token=TOKEN_API)
-    asyncio.run(dp.start_polling(bot))
-    logging.info("bot started")
-
 
 msg_handlers = (
     (handlers.cmd_start, CommandStart()),
@@ -49,6 +37,17 @@ for func, template in msg_handlers:
 
 for func, template in callback_handlers:
     router.callback_query.register(func, template)
+
+
+def main() -> None:
+    logging.info("starting...")
+    dp = Dispatcher(storage=MemoryStorage())
+
+    dp.include_router(router)
+    bot = Bot(token=TOKEN_API)
+    asyncio.run(dp.start_polling(bot))
+    logging.info("bot started")
+
 
 if __name__ == "__main__":
     try:
