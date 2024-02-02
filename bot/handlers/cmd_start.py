@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
-from _redis_funcs import save_msg_data_to_redis
-from _reply_markups import START_KEYBOARD
-from handlers._messages import cmd_start_reply_text
+from ._messages import cmd_start_reply_text
+from ._redis_funcs import save_msg_data_to_redis
+from ._reply_markups import START_KEYBOARD
 
 if TYPE_CHECKING:
     from aiogram import types

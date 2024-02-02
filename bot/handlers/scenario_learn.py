@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING
 
-from _message_editors import delete_reply_markup_start_message
 from db import db_manager
-from _reply_markups import get_learn_keyboard
-from handlers._messages import get_learn_message, no_cards_to_learn_msg
+from ._message_editors import delete_reply_markup_start_message
+from ._messages import get_learn_message, no_cards_to_learn_msg
+from ._reply_markups import get_learn_keyboard
 
 if TYPE_CHECKING:
     from aiogram import types
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class Learn:
     @staticmethod
     async def remember_callback(
-            callback: "types.CallbackQuery", state: "FSMContext"
+        callback: "types.CallbackQuery", state: "FSMContext"
     ) -> None:
         await callback.message.answer(text=callback.data)
 
@@ -23,7 +23,9 @@ class Learn:
         await Learn.learn_callback(callback, state)
 
     @staticmethod
-    async def forget_callback(callback: "types.CallbackQuery", state: "FSMContext") -> None:
+    async def forget_callback(
+        callback: "types.CallbackQuery", state: "FSMContext"
+    ) -> None:
         await callback.message.answer(text=callback.data)
 
         card_id = _get_card_id_from_callback(callback)
@@ -32,7 +34,9 @@ class Learn:
         await Learn.learn_callback(callback, state)
 
     @staticmethod
-    async def learn_callback(callback: "types.CallbackQuery", state: "FSMContext") -> None:
+    async def learn_callback(
+        callback: "types.CallbackQuery", state: "FSMContext"
+    ) -> None:
         card = db_manager.get_card_to_check(callback.from_user.id)
 
         if card is not None:

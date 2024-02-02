@@ -1,4 +1,4 @@
-__all__ = ['get_cards', 'cmd_start', 'Add', 'Learn']
+__all__ = ["get_cards", "cmd_start", "Add", "Learn"]
 
 from .cmd_get_cards import get_cards
 from .cmd_start import cmd_start

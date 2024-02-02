@@ -5,6 +5,7 @@ import redis.asyncio as redis
 redis_host = os.getenv("MY_REDIS_HOST", "localhost")
 r = redis.Redis(host=redis_host, decode_responses=True)
 
+
 # TODO: add type annotations
 async def save_msg_data_to_redis(msg_name, msg):
     print(f"saved {msg.text}")

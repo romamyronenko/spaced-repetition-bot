@@ -14,7 +14,7 @@ from patches import (
     patch_learn_callback,
     patch_redis, patch_db_manager_get_cards, patch_db_manager_add, patch_db_manager_learn,
 )
-from _reply_markups import ADD_IS_DONE_KEYBAORD, get_learn_keyboard, START_KEYBOARD
+from handlers._reply_markups import ADD_IS_DONE_KEYBAORD, get_learn_keyboard, START_KEYBOARD
 from tests.utils import TEST_USER
 
 engine = create_engine("sqlite://")

@@ -11,6 +11,7 @@ from _form import Form
 from handlers import Learn
 from handlers.scenario_add import Add
 
+# TODO: add pre-commit
 log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 log_filename = "log.log"
 logging.basicConfig(filename=log_filename, level=logging.DEBUG, format=log_format)

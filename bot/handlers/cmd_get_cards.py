@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from db import db_manager
-from handlers._messages import get_msg_by_cards
+from ._messages import get_msg_by_cards
 
 if TYPE_CHECKING:
     from aiogram import types
