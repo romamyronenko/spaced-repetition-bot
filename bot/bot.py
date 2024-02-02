@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 
-from aiogram import Bot, Dispatcher, Router, F
+from aiogram import Bot, Dispatcher, Router, F, types
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.storage.memory import MemoryStorage
 
@@ -45,19 +45,25 @@ for func, template in callback_handlers:
     router.callback_query.register(func, template)
 
 
-def main() -> None:
+async def main_async() -> None:
     logging.info("starting...")
     dp = Dispatcher(storage=MemoryStorage())
 
     dp.include_router(router)
     bot = Bot(token=TOKEN_API)
-    asyncio.run(dp.start_polling(bot))
+    await bot.set_my_commands(
+        [
+            types.BotCommand(command="start", description="Запустити бота"),
+            types.BotCommand(command="get_cards", description="Показати всі картки"),
+        ]
+    )
+    await dp.start_polling(bot)
     logging.info("bot started")
 
 
 if __name__ == "__main__":
     try:
-        main()
+        asyncio.run(main_async())
     except Exception as e:
         logging.error(str(e))
         logging.info("bot stopped")
