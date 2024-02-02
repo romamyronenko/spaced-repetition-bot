@@ -23,8 +23,16 @@ jobs:
         run: |
           pylint bot
 
+  black:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rickstaa/action-black@v1
+        with:
+          black_args: ". --check"
+
   pytest:
-    needs: pylint
+    needs: [ pylint, black ]
     runs-on: ubuntu-latest
     strategy:
       matrix:
