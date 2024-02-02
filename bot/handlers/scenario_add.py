@@ -7,6 +7,7 @@ from _message_editors import delete_reply_markup_add_message, delete_reply_marku
 from _redis_funcs import save_msg_data_to_redis
 from db import db_manager
 from _reply_markups import ADD_IS_DONE_KEYBAORD
+from handlers._messages import add_callback_reply_text, add_separator, wrong_add_message_format_msg
 
 if TYPE_CHECKING:
     from aiogram import types
@@ -23,9 +24,8 @@ class Add:
     @staticmethod
     async def add_callback(callback: "types.CallbackQuery", state: "FSMContext") -> None:
         await delete_reply_markup_start_message(callback.bot, callback.from_user.id)
-        reply_text = "Введіть дані в наступному форматі:\nслово - значення"
         msg = await callback.message.answer(
-            text=reply_text, reply_markup=ADD_IS_DONE_KEYBAORD
+            text=add_callback_reply_text, reply_markup=ADD_IS_DONE_KEYBAORD
         )
         await save_msg_data_to_redis("add", msg)
         await state.set_state(Form.add_card)
@@ -34,14 +34,13 @@ class Add:
     async def add_card_state(msg: "types.Message", state: "FSMContext") -> None:
         message = msg.text
 
-        sep = " - "
-        if sep in message:
+        if add_separator in message:
             bot = msg.bot
-            front, back = message.split(sep)
+            front, back = message.split(add_separator)
             await update_text_saved_add_message(bot, msg.from_user.id, message)
             db_manager.add_card(front, back, msg.from_user.id)
             await msg.delete()
 
         else:
-            await msg.answer("Невірний формат")
+            await msg.answer(wrong_add_message_format_msg)
             await state.clear()
