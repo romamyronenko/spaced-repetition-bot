@@ -15,7 +15,7 @@ async def delete_reply_markup_start_message(bot: "Bot", user_id: int) -> None:
     msg_id: int = msg_data["message_id"]
     chat_id: int = msg_data["chat_id"]
 
-    logging.debug(f"delete message {msg_id} from chat {chat_id}")
+    logging.debug("delete message %i from chat %i", msg_id, chat_id)
 
     try:
         await bot.edit_message_reply_markup(chat_id, msg_id)
@@ -51,7 +51,7 @@ async def delete_reply_markup_add_message(bot: "Bot", user_id: int) -> None:
     msg_id = msg_data["message_id"]
     chat_id = msg_data["chat_id"]
 
-    logging.debug(f"delete message {msg_id} from chat {chat_id}")
+    logging.debug("delete message %i from chat %i", msg_id, chat_id)
 
     try:
         await bot.edit_message_reply_markup(chat_id, msg_id)

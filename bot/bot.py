@@ -6,14 +6,13 @@ from aiogram import Bot, Dispatcher, Router, F
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.storage.memory import MemoryStorage
 
-import handlers
-from _form import Form
-from handlers import Learn
-from handlers.scenario_add import Add
+from . import handlers
+from ._form import Form
+from .handlers import Learn, Add
 
-log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-log_filename = "log.log"
-logging.basicConfig(filename=log_filename, level=logging.DEBUG, format=log_format)
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+LOG_FILENAME = "log.log"
+logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format=LOG_FORMAT)
 
 TOKEN_API = os.getenv("TOKEN_API")
 router = Router()

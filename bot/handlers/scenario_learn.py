@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from db import db_manager
 from ._message_editors import delete_reply_markup_start_message
-from ._messages import get_learn_message, no_cards_to_learn_msg
+from ._messages import get_learn_message, NO_CARDS_TO_LEARN_MSG
 from ._reply_markups import get_learn_keyboard
 
 if TYPE_CHECKING:
@@ -44,7 +44,7 @@ class Learn:
             await delete_reply_markup_start_message(callback.bot, callback.from_user.id)
 
         else:
-            await callback.answer(text=no_cards_to_learn_msg)
+            await callback.answer(text=NO_CARDS_TO_LEARN_MSG)
 
 
 async def _send_card_message(callback, card):

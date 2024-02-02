@@ -1,8 +1,8 @@
-cmd_start_reply_text = "Привіт, я - бот для запам'ятовування."
-add_callback_reply_text = "Введіть дані в наступному форматі:\nслово - значення"
-add_separator = " - "
-wrong_add_message_format_msg = "Невірний формат"
-no_cards_to_learn_msg = "На сьогодні ви вже повторили всі слова."
+CMD_START_REPLY_TEXT = "Привіт, я - бот для запам'ятовування."
+ADD_CALLBACK_REPLY_TEXT = "Введіть дані в наступному форматі:\nслово - значення"
+ADD_SEPARATOR = " - "
+WRONG_ADD_MESSAGE_FORMAT_MSG = "Невірний формат"
+NO_CARDS_TO_LEARN_MSG = "На сьогодні ви вже повторили всі слова."
 
 
 def get_msg_by_cards(cards):

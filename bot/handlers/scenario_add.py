@@ -9,9 +9,9 @@ from ._message_editors import (
     update_text_saved_add_message,
 )
 from ._messages import (
-    add_callback_reply_text,
-    add_separator,
-    wrong_add_message_format_msg,
+    ADD_CALLBACK_REPLY_TEXT,
+    ADD_SEPARATOR,
+    WRONG_ADD_MESSAGE_FORMAT_MSG,
 )
 from ._redis_funcs import save_msg_data_to_redis
 from ._reply_markups import ADD_IS_DONE_KEYBAORD
@@ -36,7 +36,7 @@ class Add:
     ) -> None:
         await delete_reply_markup_start_message(callback.bot, callback.from_user.id)
         msg = await callback.message.answer(
-            text=add_callback_reply_text, reply_markup=ADD_IS_DONE_KEYBAORD
+            text=ADD_CALLBACK_REPLY_TEXT, reply_markup=ADD_IS_DONE_KEYBAORD
         )
         await save_msg_data_to_redis("add", msg)
         await state.set_state(Form.add_card)
@@ -45,13 +45,13 @@ class Add:
     async def add_card_state(msg: "types.Message", state: "FSMContext") -> None:
         message = msg.text
 
-        if add_separator in message:
+        if ADD_SEPARATOR in message:
             bot = msg.bot
-            front, back = message.split(add_separator)
+            front, back = message.split(ADD_SEPARATOR)
             await update_text_saved_add_message(bot, msg.from_user.id, message)
             db_manager.add_card(front, back, msg.from_user.id)
             await msg.delete()
 
         else:
-            await msg.answer(wrong_add_message_format_msg)
+            await msg.answer(WRONG_ADD_MESSAGE_FORMAT_MSG)
             await state.clear()

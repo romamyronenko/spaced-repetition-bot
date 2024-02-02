@@ -1,3 +1,7 @@
+"""
+Mocked Bot for tests
+"""
+
 from collections import deque
 from typing import TYPE_CHECKING, Any, AsyncGenerator, Deque, Dict, Optional, Type
 
@@ -9,8 +13,12 @@ from aiogram.types import UNSET_PARSE_MODE, ResponseParameters, User
 
 
 class MockedSession(BaseSession):
+    """
+    Mocked session for testing
+    """
+
     def __init__(self):
-        super(MockedSession, self).__init__()
+        super().__init__()
         self.responses: Deque[Response[TelegramType]] = deque()
         self.requests: Deque[TelegramMethod[TelegramType]] = deque()
         self.closed = True
@@ -43,17 +51,16 @@ class MockedSession(BaseSession):
         return response.result  # type: ignore
 
     async def stream_content(
-        self,
-        url: str,
-        headers: Optional[Dict[str, Any]] = None,
-        timeout: int = 30,
-        chunk_size: int = 65536,
-        raise_for_status: bool = True,
+        self, *args, **kwargs
     ) -> AsyncGenerator[bytes, None]:  # pragma: no cover
         yield b""
 
 
 class MockedBot(Bot):
+    """
+    Mocked Bot for testing
+    """
+
     if TYPE_CHECKING:
         session: MockedSession
 

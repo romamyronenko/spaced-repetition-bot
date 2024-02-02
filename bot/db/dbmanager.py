@@ -8,7 +8,7 @@ from db.schema import Card
 
 if TYPE_CHECKING:
     from sqlalchemy import Engine
-
+    from typing import List
 
 DATE_FORMAT = "%Y-%m-%d"
 MAX_INTERVAL = 31
@@ -56,12 +56,12 @@ class DBManager:
         self._session.flush()
         self._session.commit()
 
-    def get_all_cards(self, user_id: int) -> list[Card]:
+    def get_all_cards(self, user_id: int) -> "List[Card]":
         stmt = select(Card).where(user_id == Card.owner)
         cards = self._session.scalars(stmt).all()
         return cards
 
-    def get_cards_to_check(self, user_id: int) -> list[Card]:
+    def get_cards_to_check(self, user_id: int) -> "List[Card]":
         stmt = select(Card).where(
             (user_id == Card.owner)
             & (Card.learn_date <= date.today().strftime(DATE_FORMAT))
@@ -70,6 +70,6 @@ class DBManager:
         cards = self._session.scalars(stmt).all()
         return cards
 
-    def get_card_to_check(self, user_id: int) -> Optional[list[Card]]:
+    def get_card_to_check(self, user_id: int) -> "Optional[List[Card]]":
         cards = self.get_cards_to_check(user_id)
         return cards[0] if cards else None
