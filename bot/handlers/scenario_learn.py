@@ -13,8 +13,6 @@ if TYPE_CHECKING:
 async def remember_callback(
     callback: "types.CallbackQuery", state: "FSMContext"
 ) -> None:
-    await callback.message.answer(text=callback.data)
-
     card_id = _get_card_id_from_callback(callback)
     db_manager.update_remember(card_id)
 
@@ -22,8 +20,6 @@ async def remember_callback(
 
 
 async def forget_callback(callback: "types.CallbackQuery", state: "FSMContext") -> None:
-    await callback.message.answer(text=callback.data)
-
     card_id = _get_card_id_from_callback(callback)
     db_manager.update_forget(card_id)
 
