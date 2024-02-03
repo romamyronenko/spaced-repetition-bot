@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from db import db_manager
+from . import cmd_start
 from ._message_editors import delete_reply_markup_start_message
 from ._messages import get_learn_message, NO_CARDS_TO_LEARN_MSG
 from ._reply_markups import get_learn_keyboard
@@ -35,6 +36,7 @@ async def learn_callback(callback: "types.CallbackQuery", state: "FSMContext") -
 
     else:
         await callback.answer(text=NO_CARDS_TO_LEARN_MSG)
+        await cmd_start(callback.message, state)
 
 
 async def _send_card_message(callback, card):
