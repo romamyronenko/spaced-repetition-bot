@@ -38,6 +38,15 @@ class DBManager:
         self._session.delete(card)
         self._session.commit()
 
+    def remove_cards(self, user_id: int, front_sides: list[str]) -> None:
+        stmt = select(Card).where(
+            Card.front_side.in_(front_sides) & (user_id == Card.owner)
+        )
+        cards = self._session.scalars(stmt).all()
+        for card in cards:
+            self._session.delete(card)
+        self._session.commit()
+
     def update_forget(self, card_id: int) -> None:
         stmt = select(Card).where(card_id == Card.id)
         cards = self._session.scalars(stmt).all()

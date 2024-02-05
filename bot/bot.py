@@ -18,7 +18,8 @@ from handlers import (
 )
 
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-LOG_FILENAME = "log.log"
+LOG_PATH = os.getenv("LOG_PATH", "/var/log/spaced_repetition")
+LOG_FILENAME = os.path.join(LOG_PATH, "log.log")
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format=LOG_FORMAT)
 
 TOKEN_API = os.getenv("TOKEN_API")
@@ -27,6 +28,7 @@ router = Router()
 msg_handlers = (
     (handlers.cmd_start, CommandStart()),
     (handlers.get_cards, Command("get_cards")),
+    (handlers.delete_cards, Command("delete_cards")),
     (add_card_state, Form.add_card),
 )
 
@@ -55,6 +57,9 @@ async def main_async() -> None:
         [
             types.BotCommand(command="start", description="Запустити бота"),
             types.BotCommand(command="get_cards", description="Показати всі картки"),
+            types.BotCommand(
+                command="delete_cards", description="idxs Видалити картки"
+            ),
         ]
     )
     await dp.start_polling(bot)

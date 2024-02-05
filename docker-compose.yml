@@ -35,6 +35,8 @@ services:
       - DB_URI=${DB_URI}
       - TOKEN_API=${TOKEN_API}
       - MY_REDIS_HOST=${MY_REDIS_HOST}
+    volumes:
+      - ${LOG_PATH}:/var/log
 
 
 networks:
