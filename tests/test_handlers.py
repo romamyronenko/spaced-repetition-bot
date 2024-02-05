@@ -13,6 +13,7 @@ from handlers import (
     done_callback,
     cmd_start,
     get_cards,
+    delete_cards,
 )
 from handlers._reply_markups import (
     ADD_IS_DONE_KEYBAORD,
@@ -27,6 +28,7 @@ from patches import (
     patch_db_manager_get_cards,
     patch_db_manager_add,
     patch_db_manager_learn,
+    patch_db_manager_delete_cards,
 )
 from utils import TEST_USER
 
@@ -65,6 +67,17 @@ async def test_get_cards(state, message, db_manager):
     message.answer.assert_called_with(
         text="1 - 2\nfront - back",
     )
+
+
+@pytest.mark.asyncio
+async def test_delete_cards(state, message, db_manager):
+    for front, back in (("1", "2"), ("front", "back")):
+        db_manager.add_card(front, back, TEST_USER.id)
+    message.text = "/delete_cards 1 2"
+    with patch_db_manager_delete_cards(db_manager):
+        await delete_cards(message, state)
+
+    assert len(db_manager.get_all_cards(message.from_user.id)) == 1
 
 
 @pytest.mark.asyncio

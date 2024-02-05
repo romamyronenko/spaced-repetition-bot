@@ -6,3 +6,4 @@ disable=
     W0613, # Unused argument
     E0401, # Unable to import
     R0903, # Too few public methods
+    W0718, # Catching too general exception Exception
