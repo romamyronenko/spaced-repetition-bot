@@ -29,6 +29,7 @@ from patches import (
     patch_db_manager_add,
     patch_db_manager_learn,
     patch_db_manager_delete_cards,
+    patch_cmd_start_learn,
 )
 from utils import TEST_USER
 
@@ -114,14 +115,15 @@ class TestLearn:
     @pytest.mark.asyncio
     async def test_learn_callback_when_no_cards(self, callback, state, db_manager):
         mock_cmd_start = AsyncMock()
-        with patch_cmd_start(mock_cmd_start), patch_db_manager(db_manager), patch_redis(
-            AsyncMock()
-        ):
+        with patch_cmd_start_learn(mock_cmd_start), patch_db_manager(
+            db_manager
+        ), patch_redis(AsyncMock()):
             await learn_callback(callback, state)
 
         callback.answer.assert_called_with(
             text="На сьогодні ви вже повторили всі слова."
         )
+        mock_cmd_start.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_remember_callback(self, callback, state):
