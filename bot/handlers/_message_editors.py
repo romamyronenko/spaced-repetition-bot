@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from aiogram.exceptions import TelegramBadRequest
 
 from ._redis_funcs import get_msg_data_from_redis, save_msg_data_to_redis
+from ._reply_markups import ADD_IS_DONE_KEYBAORD
 
 if TYPE_CHECKING:
     from aiogram import Bot
@@ -36,15 +37,12 @@ async def update_text_saved_add_message(
             text=f"{text}\n{text_to_add}",
             chat_id=chat_id,
             message_id=msg_id,
-            reply_markup=None,
+            reply_markup=ADD_IS_DONE_KEYBAORD,
         )
 
         await save_msg_data_to_redis("add", msg)
     except TelegramBadRequest as e:
         logging.debug(str(e))
-        print(str(e))
-    except Exception as e:
-        print(str(e))
 
 
 async def delete_reply_markup_add_message(bot: "Bot", user_id: int) -> None:
