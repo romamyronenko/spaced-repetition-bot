@@ -1,15 +1,21 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-
-ADD_IS_DONE_KEYBAORD = InlineKeyboardMarkup(
-    inline_keyboard=[[InlineKeyboardButton(text="Готово!", callback_data="done")]]
+from aiogram.types import (
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    KeyboardButton,
+    ReplyKeyboardMarkup,
 )
-START_KEYBOARD = InlineKeyboardMarkup(
-    inline_keyboard=[
+
+ADD_IS_DONE_KEYBAORD = ReplyKeyboardMarkup(
+    keyboard=[[KeyboardButton(text="Готово!")]], resize_keyboard=True
+)
+START_KEYBOARD = ReplyKeyboardMarkup(
+    keyboard=[
         [
-            InlineKeyboardButton(text="Додати слова", callback_data="add"),
-            InlineKeyboardButton(text="Вчити!", callback_data="learn"),
+            KeyboardButton(text="Додати слова!"),
+            KeyboardButton(text="Вчити!"),
         ]
-    ]
+    ],
+    resize_keyboard=True,
 )
 
 
