@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING
 
 from db import db_manager
 from . import cmd_start
-from ._message_editors import delete_reply_markup_start_message
 from ._messages import get_learn_message, NO_CARDS_TO_LEARN_MSG
 from ._reply_markups import get_learn_keyboard
 
@@ -27,20 +26,19 @@ async def forget_callback(callback: "types.CallbackQuery", state: "FSMContext") 
     await learn_callback(callback, state)
 
 
-async def learn_callback(callback: "types.CallbackQuery", state: "FSMContext") -> None:
-    card = db_manager.get_card_to_check(callback.from_user.id)
+async def learn_callback(message: "types.Message", state: "FSMContext") -> None:
+    card = db_manager.get_card_to_check(message.from_user.id)
 
     if card is not None:
-        await _send_card_message(callback, card)
-        await delete_reply_markup_start_message(callback.bot, callback.from_user.id)
+        await _send_card_message(message, card)
 
     else:
-        await callback.answer(text=NO_CARDS_TO_LEARN_MSG)
-        await cmd_start(callback.message, state)
+        await message.answer(text=NO_CARDS_TO_LEARN_MSG)
+        await cmd_start(message.message, state)
 
 
-async def _send_card_message(callback, card):
-    await callback.message.answer(
+async def _send_card_message(message: "types.Message", card):
+    await message.answer(
         text=get_learn_message(card),
         parse_mode="html",
         reply_markup=get_learn_keyboard(card.id),

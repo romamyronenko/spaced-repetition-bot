@@ -3,8 +3,9 @@ import logging
 import os
 
 from aiogram import Bot, Dispatcher, Router, F, types
-from aiogram.filters import Command, CommandStart
+from aiogram.filters import Command, CommandStart, Filter
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import Message
 
 import handlers
 from _form import Form
@@ -25,19 +26,28 @@ logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format=LOG_FORMA
 TOKEN_API = os.getenv("TOKEN_API")
 router = Router()
 
+
+class TextFilter(Filter):
+    def __init__(self, my_text: str) -> None:
+        self.my_text = my_text
+
+    async def __call__(self, message: "Message") -> bool:
+        return message.text == self.my_text
+
+
 msg_handlers = (
+    (done_callback, TextFilter("Готово!")),
     (handlers.cmd_start, CommandStart()),
     (handlers.get_cards, Command("get_cards")),
     (handlers.delete_cards, Command("delete_cards")),
     (add_card_state, Form.add_card),
+    (add_callback, TextFilter("Додати слова!")),
+    (learn_callback, TextFilter("Вчити!")),
 )
 
 callback_handlers = (
     (remember_callback, F.data.startswith("remember")),
     (forget_callback, F.data.startswith("forget")),
-    (learn_callback, F.data == "learn"),
-    (done_callback, F.data == "done"),
-    (add_callback, F.data == "add"),
 )
 
 for func, template in msg_handlers:

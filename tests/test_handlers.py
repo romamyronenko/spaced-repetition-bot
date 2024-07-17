@@ -15,6 +15,7 @@ from handlers import (
     get_cards,
     delete_cards,
 )
+from handlers._messages import NO_CARDS_TO_LEARN_MSG
 from handlers._reply_markups import (
     ADD_IS_DONE_KEYBAORD,
     get_learn_keyboard,
@@ -120,9 +121,7 @@ class TestLearn:
         ), patch_redis(AsyncMock()):
             await learn_callback(callback, state)
 
-        callback.answer.assert_called_with(
-            text="На сьогодні ви вже повторили всі слова."
-        )
+        callback.answer.assert_called_with(text=NO_CARDS_TO_LEARN_MSG)
         mock_cmd_start.assert_awaited_once()
 
     @pytest.mark.asyncio
